@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# S3 File Manager
 
-## Getting Started
+File manager berbasis web untuk storage S3 milik sendiri — AWS S3, Cloudflare R2, MinIO,
+DigitalOcean Spaces, Wasabi, Backblaze B2, IDCloudHost, atau layanan S3-compatible lainnya.
+Dibangun dengan Next.js 16 dan SQLite.
 
-First, run the development server:
+## Fitur
+
+- **Banyak koneksi S3** — tambah, edit, hapus, dan tes koneksi. Ada preset endpoint per provider.
+- **Kredensial terenkripsi** — Secret Access Key disimpan di SQLite dengan AES-256-GCM dan tidak pernah dikirim ke browser.
+- **Bucket** — lihat daftar bucket, buat, dan hapus bucket kosong (atau kunci koneksi ke satu bucket default).
+- **Jelajah file** — navigasi folder, breadcrumb, sortir (nama/ukuran/tanggal), cari di folder, "muat lebih banyak" untuk folder besar.
+- **Upload** — beberapa file sekaligus, upload folder, drag & drop (termasuk folder), progress per file, bisa dibatalkan.
+  File besar dikirim otomatis sebagai multipart upload, dan bucket **tidak perlu konfigurasi CORS**.
+- **Kelola** — buat folder, ganti nama, pindahkan (file & folder, rekursif), hapus (multi-pilih, folder rekursif).
+- **Pratinjau** — gambar, video, audio, PDF, dan file teks/kode (navigasi ← →).
+- **Bagikan** — presigned link dengan masa berlaku 1 jam / 1 hari / 7 hari, download, salin path `s3://`.
+- **Info objek** — ukuran, content-type, ETag, storage class, metadata.
+- **Login opsional** dengan password lewat environment variable.
+- Shortcut: `Ctrl+A` pilih semua, `Delete` hapus, `Backspace` naik folder, `Esc` batal pilih.
+
+## Menjalankan
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Production:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Butuh Node.js 20+. Database dibuat otomatis di `data/app.db` saat pertama jalan.
 
-## Learn More
+## Konfigurasi
 
-To learn more about Next.js, take a look at the following resources:
+Salin `.env.example` ke `.env.local` bila perlu:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variabel         | Keterangan                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ADMIN_PASSWORD` | Password login. **Isi ini kalau aplikasi bisa diakses orang lain** — tanpa ini semua orang bisa membuka app. |
+| `APP_SECRET`     | Kunci untuk mengenkripsi kredensial & menandatangani sesi. Jika kosong, dibuat otomatis di `data/.secret`.   |
+| `DATABASE_PATH`  | Lokasi file SQLite (default `./data/app.db`).                                                                |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> Backup folder `data/` bersama-sama: tanpa `data/.secret` (atau `APP_SECRET` yang sama),
+> kredensial yang tersimpan tidak bisa didekripsi.
 
-## Deploy on Vercel
+## Catatan per provider
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **AWS S3** — kosongkan endpoint, isi region sesuai lokasi bucket.
+- **Cloudflare R2** — endpoint `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`, region `auto`, path-style aktif.
+  Token R2 yang dibatasi ke satu bucket tidak bisa list bucket — isi "Bucket default".
+- **MinIO** — aktifkan path-style.
+- Jika key hanya punya akses ke satu bucket, isi **Bucket default** supaya app tidak memanggil `ListBuckets`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Struktur
+
+```
+src/
+  app/
+    (app)/page.tsx            Daftar koneksi
+    (app)/c/[id]/page.tsx     File manager
+    login/                    Halaman login
+    api/connections/...       CRUD + tes koneksi (SQLite)
+    api/s3/[id]/...           buckets, objects, upload, folder, rename, delete, url, object, head
+  components/                 UI (FileManager, ConnectionForm, PreviewModal, uploads, ...)
+  lib/
+    db.ts                     Koneksi SQLite (better-sqlite3)
+    connections.ts            Query & validasi koneksi
+    secret.ts                 Enkripsi AES-256-GCM
+    s3.ts                     S3 client & helper
+    auth.ts, api.ts           Sesi login & wrapper route handler
+```
