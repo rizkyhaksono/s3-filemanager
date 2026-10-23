@@ -1,5 +1,8 @@
 // Types and constants shared between the server routes and the browser.
 
+/** Virtual connection backed by S3_* env vars. SQLite autoincrement starts at 1. */
+export const ENV_CONNECTION_ID = 0;
+
 export type Connection = {
   id: number;
   name: string;

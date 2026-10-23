@@ -7,6 +7,7 @@ import {
   toPublic,
   updateConnection,
 } from "@/lib/connections";
+import { ENV_CONNECTION_ID } from "@/lib/types";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -17,6 +18,9 @@ export const GET = route<Ctx>(async (_req, { params }) => {
 });
 
 export const PUT = route<Ctx>(async (req, { params }) => {
+  if (Number((await params).id) === ENV_CONNECTION_ID) {
+    throw new HttpError(400, "Koneksi dari environment tidak bisa diubah");
+  }
   const input = parseConnectionInput(await readJson(req), false);
   const updated = updateConnection(Number((await params).id), input);
   if (!updated) throw new HttpError(404, "Koneksi tidak ditemukan");
@@ -24,6 +28,9 @@ export const PUT = route<Ctx>(async (req, { params }) => {
 });
 
 export const DELETE = route<Ctx>(async (_req, { params }) => {
+  if (Number((await params).id) === ENV_CONNECTION_ID) {
+    throw new HttpError(400, "Koneksi dari environment tidak bisa dihapus");
+  }
   if (!deleteConnection(Number((await params).id))) {
     throw new HttpError(404, "Koneksi tidak ditemukan");
   }

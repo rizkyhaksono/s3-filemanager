@@ -23,7 +23,7 @@ Dibangun dengan Next.js 16 dan SQLite.
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev          # http://localhost:3009
 ```
 
 Production:
@@ -44,9 +44,18 @@ Salin `.env.example` ke `.env.local` bila perlu:
 | `ADMIN_PASSWORD` | Password login. **Isi ini kalau aplikasi bisa diakses orang lain** — tanpa ini semua orang bisa membuka app. |
 | `APP_SECRET`     | Kunci untuk mengenkripsi kredensial & menandatangani sesi. Jika kosong, dibuat otomatis di `data/.secret`.   |
 | `DATABASE_PATH`  | Lokasi file SQLite (default `./data/app.db`).                                                                |
+| `S3_ACCESS_KEY_ID` | Access key. Bersama secret, mengaktifkan koneksi langsung dari env.                                      |
+| `S3_SECRET_ACCESS_KEY` | Secret key. Hanya dibaca di server, tidak disimpan di SQLite.                                        |
+| `S3_ENDPOINT`    | URL S3-compatible. Kosongkan untuk Amazon S3.                                                                |
+| `S3_REGION`      | Region (default `us-east-1`).                                                                                |
+| `S3_BUCKET`      | Bucket yang langsung dibuka. Opsional.                                                                       |
+| `S3_FORCE_PATH_STYLE` | `true` (default) untuk MinIO, R2, dan S3-compatible lain. `false` untuk AWS virtual-hosted.           |
+| `S3_NAME`        | Judul di file manager (default `S3`).                                                                        |
+
+Kalau `S3_ACCESS_KEY_ID` dan `S3_SECRET_ACCESS_KEY` terisi, `/` langsung membuka file manager untuk storage itu. Kalau keduanya kosong, aplikasi memakai daftar koneksi yang disimpan seperti biasa.
 
 > Backup folder `data/` bersama-sama: tanpa `data/.secret` (atau `APP_SECRET` yang sama),
-> kredensial yang tersimpan tidak bisa didekripsi.
+> kredensial yang tersimpan tidak bisa didekripsi. Kunci dari `S3_SECRET_ACCESS_KEY` tidak ikut tersimpan di database.
 
 ## Catatan per provider
 

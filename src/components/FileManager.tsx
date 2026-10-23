@@ -26,7 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { api, formatBytes, formatDate, isPreviewable, qs } from "@/lib/client";
-import type { Connection, Entry, FileEntry, ListResult } from "@/lib/types";
+import { ENV_CONNECTION_ID, type Connection, type Entry, type FileEntry, type ListResult } from "@/lib/types";
 import { BucketList } from "./BucketList";
 import { FileIcon } from "./FileIcon";
 import { Menu } from "./Menu";
@@ -638,9 +638,11 @@ async function copyText(text: string, toast: ReturnType<typeof useToast>) {
 function PageHeader({ conn }: { conn: Connection }) {
   return (
     <div className="mb-4 flex items-center gap-3">
-      <Link href="/" className="rounded-lg p-1.5 text-muted hover:bg-subtle hover:text-fg" title="Kembali ke koneksi">
-        <ArrowLeft className="size-4" />
-      </Link>
+      {conn.id !== ENV_CONNECTION_ID && (
+        <Link href="/" className="rounded-lg p-1.5 text-muted hover:bg-subtle hover:text-fg" title="Kembali ke koneksi">
+          <ArrowLeft className="size-4" />
+        </Link>
+      )}
       <div className="min-w-0">
         <h1 className="truncate text-lg font-semibold tracking-tight">{conn.name}</h1>
         <p className="truncate font-mono text-xs text-muted">{conn.endpoint || `AWS S3 · ${conn.region}`}</p>

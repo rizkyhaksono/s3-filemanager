@@ -1,7 +1,8 @@
 import "server-only";
 import { db } from "./db";
+import { envConnectionConfig, envPublicConnection } from "./env-connection";
 import { decrypt, encrypt } from "./secret";
-import type { Connection } from "./types";
+import { ENV_CONNECTION_ID, type Connection } from "./types";
 
 export type ConnectionRow = {
   id: number;
@@ -64,12 +65,30 @@ export function listConnections(): PublicConnection[] {
 }
 
 export function getConnectionRow(id: number): ConnectionRow | undefined {
+  if (id === ENV_CONNECTION_ID) {
+    const pub = envPublicConnection();
+    if (!pub) return undefined;
+    return {
+      id: pub.id,
+      name: pub.name,
+      provider: pub.provider,
+      endpoint: pub.endpoint,
+      region: pub.region,
+      access_key_id: pub.accessKeyId,
+      secret_access_key: "",
+      bucket: pub.bucket,
+      force_path_style: pub.forcePathStyle ? 1 : 0,
+      created_at: pub.createdAt,
+      updated_at: pub.updatedAt,
+    };
+  }
   return db.prepare("SELECT * FROM connections WHERE id = ?").get(id) as
     | ConnectionRow
     | undefined;
 }
 
 export function getConnectionConfig(id: number): ConnectionConfig | null {
+  if (id === ENV_CONNECTION_ID) return envConnectionConfig();
   const row = getConnectionRow(id);
   if (!row) return null;
   return {
